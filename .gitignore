@@ -30,3 +30,19 @@
 *.exe
 *.out
 *.app
+
+data/.vcs/
+*.o
+*.exe
+
+# Ignore object files and compiled binaries
+obj/
+*.o
+*.out
+Rift  # Ignore the final executable
+*.log  # Ignore log files if any
+
+.vscode/
+
+data/random
+data/suii

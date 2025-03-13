@@ -11,12 +11,16 @@ int main(int argc, char *argv[]){
         return 1;
     }
 
-    string command = argv[1];
+    string command1 = argv[1];
 
     VCS vcs;
 
-    if(command == "init"){
+    if(command1 == "init"){
         vcs.init();
+    }
+    else{
+        cerr << "Error: Invalid command!! " << endl;
+        return 1;
     }
 }
 

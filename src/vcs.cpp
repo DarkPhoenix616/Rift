@@ -14,7 +14,8 @@ VCS::VCS(){
 }
 
 void VCS::init(){
-    if(!fs::exists("./data/.vcs")){
+    if(!fs::exists("./data")){
+        fs::create_directory("./data");
         fs::create_directory("./data/.vcs");
         std::ofstream commitFile("./data/.vcs/commits.log");
         commitFile.close();

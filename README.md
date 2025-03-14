@@ -50,6 +50,7 @@ Rift init
 ## 📄 Available Commands
 
 - `Rift init` - Initializes a new Rift repository.
+- `Rift status` - Detects changes in the files and shows the status of your directory
 
 ## 🛠 Cleaning Up
 

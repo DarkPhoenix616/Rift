@@ -1,8 +1,8 @@
 # Compiler and Flags
 CXX = g++
-CXXFLAGS = -Wall -std=c++17 -Iinclude
-LDFLAGS = -L/opt/homebrew/opt/openssl@3/lib -lssl -lcrypto
-CPPFLAGS = -I/opt/homebrew/opt/openssl@3/include
+CXXFLAGS = -Wall -std=c++17 -g -Iinclude -I/opt/homebrew/opt/nlohmann-json/include
+LDFLAGS = -L/opt/homebrew/Cellar/openssl@3/3.4.1/lib -lssl -lcrypto
+CPPFLAGS = -I/opt/homebrew/Cellar/openssl@3/3.4.1/include -I/opt/homebrew/opt/nlohmann-json/include
 
 # Directories
 SRC_DIR = src
@@ -26,7 +26,7 @@ $(TARGET): $(OBJ_FILES)
 
 # Build object files
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(HEADERS) | $(OBJ_DIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 # Create obj directory if not exists
 $(OBJ_DIR):

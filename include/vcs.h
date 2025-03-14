@@ -14,6 +14,8 @@ class VCS{
         VCS();
 
         void init();
+        void add(const string& filename);
+        void status();
 };
 
 #endif

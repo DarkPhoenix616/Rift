@@ -21,7 +21,11 @@ cd rift
 
 ## ⚙️ Building the Project
 
-This project uses a `Makefile` to compile the source code. To build the executable, run:
+This project uses a `Makefile` to compile the source code and a 'dependencies.mk' to install the required dependencies. To build the executable, run:
+
+```sh
+make -f dependencies.mk install
+```
 
 ```sh
 make

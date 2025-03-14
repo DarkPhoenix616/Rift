@@ -12,8 +12,8 @@
 using json = nlohmann::json;
 namespace fs = std::filesystem;
 
-const string FILE_HISTORY_PATH = "./data/.vcs/file_history.json";
-const string HASH_MAP_PATH = "./data/.vcs/hash_map.json";
+const string STAGED_FILE_HISTORY_PATH = "./data/.vcs/Staged State/file_history.json";
+const string STAGED_HASH_MAP_PATH = "./data/.vcs/Staged State/hash_map.json";
 
 #define RED     "\033[31m"
 #define RESET   "\033[0m"
@@ -102,8 +102,8 @@ void FileHistoryManager::saveToDisk() {
         hashMapJson[hash] = content;
     }
 
-    std::ofstream fileHistoryFile(FILE_HISTORY_PATH);
-    std::ofstream hashMapFile(HASH_MAP_PATH);
+    std::ofstream fileHistoryFile(STAGED_FILE_HISTORY_PATH);
+    std::ofstream hashMapFile(STAGED_HASH_MAP_PATH);
 
     fileHistoryFile << fileHistoryJson.dump(4);
     hashMapFile << hashMapJson.dump(4);
@@ -114,8 +114,8 @@ void FileHistoryManager::saveToDisk() {
 
 // Function to load data from JSON files
 void FileHistoryManager::loadFromDisk() {
-    std::ifstream fileHistoryIn("./data/.vcs/file_history.json");
-    std::ifstream hashMapIn("./data/.vcs/hash_map.json");
+    std::ifstream fileHistoryIn(STAGED_FILE_HISTORY_PATH);
+    std::ifstream hashMapIn(STAGED_HASH_MAP_PATH);
 
     if (!fileHistoryIn || !hashMapIn) {
         std::cerr << "No previous repository data found." << std::endl;
@@ -176,11 +176,11 @@ void FileHistoryManager::initializeRepo() {    // Iterates the entire repository
     }
 
     // Save to JSON files
-    std::ofstream fileHistoryOut("./data/.vcs/file_history.json");
+    std::ofstream fileHistoryOut(STAGED_FILE_HISTORY_PATH);
     fileHistoryOut << fileHistoryJson.dump(4);
     fileHistoryOut.close();
 
-    std::ofstream hashMapOut("./data/.vcs/hash_map.json");
+    std::ofstream hashMapOut(STAGED_HASH_MAP_PATH);
     hashMapOut << hashMapJson.dump(4);
     hashMapOut.close();
 
@@ -236,23 +236,23 @@ bool FileHistoryManager::isFileModified(const string& filename) {
 
 void FileHistoryManager::showStatus() {
     vector<string> modified;
-    vector<string> unmodified;
+    //vector<string> unmodified;
     for (const auto& entry : fileHistoryMap) {
         std::string filename = entry.first;
         if (isFileModified(filename)) {
             modified.push_back(filename);
-        } else {
+        } /*else {
             unmodified.push_back(filename);
-        }
+        }*/
     }
     std::cout << RED << "Modified files: ";
     for(const string file: modified) {
         std::cout << file << " ";
     }
     std::cout << "\n" << RESET;
-    std::cout << "Unmodified files: "; 
+    /*std::cout << "Unmodified files: "; 
     for(const string file : unmodified) {
         std::cout << file << " ";
-    }
+    }*/
     std::cout << "\n";
 }

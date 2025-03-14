@@ -4,9 +4,6 @@ CXXFLAGS = -Wall -std=c++17 -g -Iinclude -I/opt/homebrew/opt/nlohmann-json/inclu
 LDFLAGS = -L/opt/homebrew/Cellar/openssl@3/3.4.1/lib -lssl -lcrypto
 CPPFLAGS = -I/opt/homebrew/Cellar/openssl@3/3.4.1/include -I/opt/homebrew/opt/nlohmann-json/include
 
-# Detect OS
-OS := $(shell uname -s)
-
 # Directories
 SRC_DIR = src
 OBJ_DIR = obj
@@ -20,22 +17,8 @@ HEADERS = $(wildcard $(INCLUDE_DIR)/*.h)
 # Output Executable Name
 TARGET = Rift
 
-# Install dependencies (cross-platform)
-install-dependencies:
-ifeq ($(OS), Darwin)  # macOS
-	brew install nlohmann-json openssl
-endif
-ifeq ($(OS), Linux)
-	sudo apt-get install -y nlohmann-json3-dev libssl-dev
-endif
-ifeq ($(OS), Windows_NT)
-	@echo "Please install dependencies manually:"
-	@echo " - nlohmann-json (https://github.com/nlohmann/json)"
-	@echo " - OpenSSL (https://slproweb.com/products/Win32OpenSSL.html)"
-endif
-
 # Default rule
-all: install-dependencies $(TARGET)
+all: $(TARGET)
 
 # Build Executable
 $(TARGET): $(OBJ_FILES)
@@ -56,3 +39,9 @@ clean:
 # Run executable
 run: $(TARGET)
 	./$(TARGET)
+
+# Dependencies
+deps:
+	@echo "To install dependencies, run: make -f dependencies.mk install"
+
+.PHONY: all clean run deps

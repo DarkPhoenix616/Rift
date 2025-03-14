@@ -18,7 +18,10 @@ void VCS::init(){
     if(!fs::exists("./data") || !fs::exists("./data/.vcs")){
         fs::create_directory("./data");
         fs::create_directory("./data/.vcs");
-        std::ofstream commitFile("./data/.vcs/commits.log");
+        fs::create_directory("./data/.vcs/Committed State");
+        std::ofstream commitFile("./data/.vcs/Committed State/commits.log");
+        fs::create_directory("./data/.vcs/Staged State");
+        fs::create_directory("./data/.vcs/Modified State");
         commitFile.close();
 
         FileHistoryManager fileHistoryManager;

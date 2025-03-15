@@ -10,7 +10,10 @@
 namespace fs = std::filesystem;
 
 VCS::VCS(){
-    //constructor 
+    // Initialize the managers by loading data when VCS is created
+    if (fs::exists("./data/.vcs")) {
+        fileManager.loadFromDisk();
+    }
 }
 
 void VCS::init(){
@@ -18,13 +21,24 @@ void VCS::init(){
         fs::create_directory("./data");
         fs::create_directory("./data/.vcs");
         fs::create_directory("./data/.vcs/Committed State");
-        std::ofstream commitFile("./data/.vcs/Committed State/commits.log");
+        fs::create_directory("./data/.vcs/Committed State/commits");
+        std::ofstream commitFile("./data/.vcs/Committed State/commit_log.json");
+        commitFile << "{}";  // Initialize with empty JSON
+        commitFile.close();
+        
         fs::create_directory("./data/.vcs/Staged State");
         fs::create_directory("./data/.vcs/Modified State");
-        commitFile.close();
+        
+        // Initialize the file history with empty JSON files
+        std::ofstream fileHistoryFile("./data/.vcs/Staged State/file_history.json");
+        fileHistoryFile << "{}";
+        fileHistoryFile.close();
+        
+        std::ofstream hashMapFile("./data/.vcs/Staged State/hash_map.json");
+        hashMapFile << "{}";
+        hashMapFile.close();
 
-        FileHistoryManager fileHistoryManager;
-        fileHistoryManager.initializeRepo(); 
+        fileManager.initializeRepo(); 
 
         std::cout << "Initialized Rift Repository" << std::endl;
     } 
@@ -34,25 +48,51 @@ void VCS::init(){
 }
 
 void VCS::add(const string& filename){
-    FileHistoryManager fileHistoryManager;
-    fileHistoryManager.loadFromDisk();    // Loading the previously stored data
-    fileHistoryManager.addFileVersion(filename);
+    // Use the class member fileManager instead of creating a new one
+    fileManager.loadFromDisk();
+    fileManager.addFileVersion(filename);
+    fileManager.saveToDisk(); // Make sure to save after adding
 
-    string fileHash = fileHistoryManager.getLatestHash(filename);
-    cout << "Added " << filename << " to the staging area \nHash Value: "<<fileHash << endl;
-    
+    string fileHash = fileManager.getLatestHash(filename);
+    cout << "Added " << filename << " to the staging area \nHash Value: " << fileHash << endl;
 }   
 
 void VCS::status(){
-    FileHistoryManager fileHistoryManager;
-    fileHistoryManager.loadFromDisk(); // First we transfer the data from the JSON files to the maps
-    fileHistoryManager.showStatus();
+    // Use the class member
+    fileManager.loadFromDisk();
+    fileManager.showStatus();
 }
+
 void VCS::commit(const std::string& message) {
+    std::cout << "DEBUG: Starting commit process..." << std::endl;
+    
+    // Check if repository exists
+    if (!fs::exists("./data/.vcs")) {
+        std::cout << "ERROR: Repository not initialized. Run 'Rift init' first." << std::endl;
+        return;
+    }
+    
+    // Check if Staged State files exist
+    if (!fs::exists("./data/.vcs/Staged State/file_history.json") || 
+        !fs::exists("./data/.vcs/Staged State/hash_map.json")) {
+        std::cout << "DEBUG: Missing Staged State files." << std::endl;
+    } else {
+        std::cout << "DEBUG: Staged State files exist." << std::endl;
+    }
+    
     // Load staged files
+    std::cout << "DEBUG: Loading file manager data..." << std::endl;
     fileManager.loadFromDisk();
     
+    // Check file_history.json content
+    std::ifstream fileHistoryFile("./data/.vcs/Staged State/file_history.json");
+    std::string fileHistoryContent((std::istreambuf_iterator<char>(fileHistoryFile)), 
+                                  std::istreambuf_iterator<char>());
+    std::cout << "DEBUG: file_history.json content: " << fileHistoryContent << std::endl;
+    fileHistoryFile.close();
+
     // Get all file names and their latest hash values
+    std::cout << "DEBUG: Getting staged files..." << std::endl;
     std::unordered_map<std::string, std::string> fileVersions = fileManager.getAllStagedFiles();
     
     // Debug output
@@ -67,12 +107,16 @@ void VCS::commit(const std::string& message) {
     }
     
     // Create commit
+    std::cout << "DEBUG: Creating commit..." << std::endl;
     std::string commitHash = commitManager.commit(fileVersions, message);
     
     if(!commitHash.empty()) {
         std::cout << "Created commit " << commitHash << ": " << message << std::endl;
+    } else {
+        std::cout << "DEBUG: commitManager.commit() returned empty hash" << std::endl;
     }
 }
+
 void VCS::log(int limit) {
     commitManager.showLog(limit);
 }

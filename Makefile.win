@@ -1,7 +1,7 @@
 # Compiler and Flags for Windows
 CXX = g++
 CXXFLAGS = -Wall -std=c++17 -Iinclude
-LDFLAGS = 
+LDFLAGS = -lssl -lcrypto
 CPPFLAGS = 
 
 # Directories
@@ -30,13 +30,13 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(HEADERS) | $(OBJ_DIR)
 
 # Create obj directory if not exists
 $(OBJ_DIR):
-	if not exist $(OBJ_DIR) mkdir $(OBJ_DIR)
+	mkdir -p $(OBJ_DIR)
 
 # Clean build files
 clean:
-	if exist $(OBJ_DIR) rmdir /s /q $(OBJ_DIR)
-	if exist $(TARGET) del $(TARGET)
+	rm -rf $(OBJ_DIR)
+	rm -f $(TARGET)
 
 # Run executable
 run: $(TARGET)
-	.\$(TARGET)
+	./$(TARGET)

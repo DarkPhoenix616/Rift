@@ -90,28 +90,44 @@ string base64_decode(const std::string &encoded) {
 }
 
 // Function to save data to JSON files
+// Function to save data to JSON files with debugging
 void FileHistoryManager::saveToDisk() {
     json fileHistoryJson;
     json hashMapJson;
 
+    std::cout << "DEBUG: Saving fileHistoryMap with " << fileHistoryMap.size() << " entries" << std::endl;
+    
     for (const auto& [filename, version] : fileHistoryMap) {
+        std::cout << "DEBUG: Saving " << filename << " -> " << version->hash << std::endl;
         fileHistoryJson[filename] = version->hash;
     }
 
     for (const auto& [hash, content] : hashMap) {
-        hashMapJson[hash] = content;
+        // Use base64_encode for content to handle binary data
+        hashMapJson[hash] = base64_encode(content);
     }
 
     std::ofstream fileHistoryFile(STAGED_FILE_HISTORY_PATH);
     std::ofstream hashMapFile(STAGED_HASH_MAP_PATH);
+
+    if (!fileHistoryFile) {
+        std::cerr << "ERROR: Could not open file history file for writing" << std::endl;
+        return;
+    }
+    
+    if (!hashMapFile) {
+        std::cerr << "ERROR: Could not open hash map file for writing" << std::endl;
+        return;
+    }
 
     fileHistoryFile << fileHistoryJson.dump(4);
     hashMapFile << hashMapJson.dump(4);
 
     fileHistoryFile.close();
     hashMapFile.close();
+    
+    std::cout << "DEBUG: Saved " << fileHistoryJson.size() << " file entries" << std::endl;
 }
-
 // Function to load data from JSON files
 void FileHistoryManager::loadFromDisk() {
     std::ifstream fileHistoryIn(STAGED_FILE_HISTORY_PATH);
@@ -189,22 +205,31 @@ void FileHistoryManager::initializeRepo() {    // Iterates the entire repository
 
 
 
-void FileHistoryManager::addFileVersion(const string& filename) {  //Adds the new version of the file to the doubly linked list
+void FileHistoryManager::addFileVersion(const string& filename) {
+    // Make sure directories exist
+    if (!fs::exists("./data/.vcs/Staged State")) {
+        fs::create_directories("./data/.vcs/Staged State");
+    }
+    
     string content = readFileContent(filename);
     if(content.empty()){
-        std::cerr << "No content in the file!! : " <<filename << std::endl;
+        std::cerr << "No content in the file!! : " << filename << std::endl;
         return;
     }
+    
     string newHash = calculateFileHash(content);
+    std::cout << "DEBUG: Adding file " << filename << " with hash " << newHash << std::endl;
 
-    if (fileHistoryMap.find(filename) != fileHistoryMap.end()) {   // CHECKING IF THE FILE ALREADY EXISTS
+    if (fileHistoryMap.find(filename) != fileHistoryMap.end()) {
+        // CHECKING IF THE FILE ALREADY EXISTS
         FileVersion* lastVersion = fileHistoryMap[filename];
         if (lastVersion->hash == newHash) {
             std::cout << filename << " has no changes.\n";
             return;
         }
         
-        FileVersion* newVersion = new FileVersion(newHash);  // Linking the new has version of the file
+        // Linking the new hash version of the file
+        FileVersion* newVersion = new FileVersion(newHash);
         newVersion->prev = lastVersion;
         lastVersion->next = newVersion;
         fileHistoryMap[filename] = newVersion;
@@ -213,10 +238,10 @@ void FileHistoryManager::addFileVersion(const string& filename) {  //Adds the ne
     }
 
     hashMap[newHash] = content;
+    std::cout << "DEBUG: Saving file history to disk..." << std::endl;
     saveToDisk();
     std::cout << "Added " << filename << " with hash " << newHash << "\n";
 }
-
 string FileHistoryManager::getLatestHash(const string& filename) {
     return fileHistoryMap.find(filename) != fileHistoryMap.end() ? fileHistoryMap[filename]->hash : "";
 }
@@ -260,7 +285,10 @@ void FileHistoryManager::showStatus() {
 std::unordered_map<std::string, std::string> FileHistoryManager::getAllStagedFiles() {
     std::unordered_map<std::string, std::string> stagedFiles;
     
+    // Debug output to see what's in fileHistoryMap
+    std::cout << "DEBUG: fileHistoryMap contents:" << std::endl;
     for (const auto& [filename, versionPtr] : fileHistoryMap) {
+        std::cout << "  " << filename << " -> " << versionPtr->hash << std::endl;
         stagedFiles[filename] = versionPtr->hash;
     }
     

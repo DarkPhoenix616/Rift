@@ -34,18 +34,18 @@ void VCS::init(){
     }
 }
 
+void VCS::status(){
+    FileHistoryManager fileHistoryManager;
+    fileHistoryManager.loadFromDisk(fileHistoryManager.fileHistoryMapStaged, fileHistoryManager.hashMapStaged); // First we transfer the data from the JSON files to the maps
+    fileHistoryManager.showStatus();
+}
+
 void VCS::add(const string& filename){
     FileHistoryManager fileHistoryManager;
-    fileHistoryManager.loadFromDisk();    // Loading the previously stored data
+    fileHistoryManager.loadFromDisk(fileHistoryManager.fileHistoryMapStaged, fileHistoryManager.hashMapStaged);    // Loading the previously stored data
     fileHistoryManager.addFileVersion(filename);
 
-    string fileHash = fileHistoryManager.getLatestHash(filename);
+    string fileHash = fileHistoryManager.getLatestHashStaged(filename);
     cout << "Added " << filename << " to the staging area \nHash Value: "<<fileHash << endl;
     
 }   
-
-void VCS::status(){
-    FileHistoryManager fileHistoryManager;
-    fileHistoryManager.loadFromDisk(); // First we transfer the data from the JSON files to the maps
-    fileHistoryManager.showStatus();
-}

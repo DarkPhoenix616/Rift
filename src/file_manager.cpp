@@ -9,14 +9,19 @@
 #include <unordered_map>
 #include <nlohmann/json.hpp>
 #include <vector>
+
 using json = nlohmann::json;
 namespace fs = std::filesystem;
 
+const string INITIAL_FILE_HISTORY_PATH = "./data/.vcs/initial_file_history.json";
 const string STAGED_FILE_HISTORY_PATH = "./data/.vcs/Staged State/file_history.json";
 const string STAGED_HASH_MAP_PATH = "./data/.vcs/Staged State/hash_map.json";
+const string COMMITTED_FILE_HISTORY_PATH = "./data/.vcs/Committed State/file_history.json";
+const string COMMITTED_HASH_MAP_PATH = "./data/.vcs/Committed State/hash_map.json";
 
 #define RED     "\033[31m"
 #define RESET   "\033[0m"
+#define GREEN   "\033[32m"
 
 string calculateFileHash(const string& content) {    // Receiving file content in the binary form
     unsigned char hash[SHA256_DIGEST_LENGTH];
@@ -90,7 +95,7 @@ string base64_decode(const std::string &encoded) {
 }
 
 // Function to save data to JSON files
-void FileHistoryManager::saveToDisk() {
+void FileHistoryManager::saveToDisk(unordered_map<string, FileVersion*>& fileHistoryMap, unordered_map<string, string>& hashMap) {
     json fileHistoryJson;
     json hashMapJson;
 
@@ -98,24 +103,44 @@ void FileHistoryManager::saveToDisk() {
         fileHistoryJson[filename] = version->hash;
     }
 
+    // Store file contents with Base64 encoding before storing
     for (const auto& [hash, content] : hashMap) {
-        hashMapJson[hash] = content;
+        hashMapJson[hash] = base64_encode(content); 
     }
+
 
     std::ofstream fileHistoryFile(STAGED_FILE_HISTORY_PATH);
     std::ofstream hashMapFile(STAGED_HASH_MAP_PATH);
 
-    fileHistoryFile << fileHistoryJson.dump(4);
-    hashMapFile << hashMapJson.dump(4);
+    if (fileHistoryFile && hashMapFile) {
+        fileHistoryFile << fileHistoryJson.dump(4);
+        hashMapFile << hashMapJson.dump(4);
+    } else {
+        std::cerr << "Error opening file for saving repository data." << std::endl;
+    }
 
     fileHistoryFile.close();
     hashMapFile.close();
 }
 
 // Function to load data from JSON files
-void FileHistoryManager::loadFromDisk() {
+void FileHistoryManager::loadFromDisk(unordered_map<string, FileVersion*>& fileHistoryMap, unordered_map<string, string>& hashMap) {
     std::ifstream fileHistoryIn(STAGED_FILE_HISTORY_PATH);
     std::ifstream hashMapIn(STAGED_HASH_MAP_PATH);
+    std::ifstream fileHistoryInitialIn(INITIAL_FILE_HISTORY_PATH);
+
+    json initialFileHistoryJson;
+    fileHistoryInitialIn >> initialFileHistoryJson;
+    fileHistoryInitialIn.close();
+
+    // Load initial file history 
+    for (auto &entry : initialFileHistoryJson.items()) {
+        std::string filename = entry.key();
+        std::string fileHash = entry.value();
+
+        
+        fileHistoryMapInitial[filename] = new FileVersion(fileHash);
+    }
 
     if (!fileHistoryIn || !hashMapIn) {
         std::cerr << "No previous repository data found." << std::endl;
@@ -129,25 +154,24 @@ void FileHistoryManager::loadFromDisk() {
     fileHistoryIn.close();
     hashMapIn.close();
 
+    // Load staged file history
     for (auto &entry : fileHistoryJson.items()) {
         std::string filename = entry.key();
         std::string fileHash = entry.value();
-
         fileHistoryMap[filename] = new FileVersion(fileHash);
     }
 
+    // Load hash map
     for (auto &entry : hashMapJson.items()) {
         std::string fileHash = entry.key();
         std::string encodedContent = entry.value();
-
-        // 🔽 Decode Base64 to get the original content
         std::string originalContent = base64_decode(encodedContent);
-
         hashMap[fileHash] = originalContent;
     }
 
     std::cout << "Loaded repository data from disk." << std::endl;
 }
+
 
 
 void FileHistoryManager::initializeRepo() {    // Iterates the entire repository and allots initial hash values to the files
@@ -166,8 +190,7 @@ void FileHistoryManager::initializeRepo() {    // Iterates the entire repository
             std::string fileHash = calculateFileHash(content);
             std::string relativePath = filePath.substr(2); // Remove "./" from path
 
-            fileHistoryMap[relativePath] = new FileVersion(fileHash);
-            hashMap[fileHash] = content;
+            fileHistoryMapInitial[relativePath] = new FileVersion(fileHash);
 
             // Store in JSON with Base64 encoding
             fileHistoryJson[relativePath] = fileHash;
@@ -176,7 +199,11 @@ void FileHistoryManager::initializeRepo() {    // Iterates the entire repository
     }
 
     // Save to JSON files
-    std::ofstream fileHistoryOut(STAGED_FILE_HISTORY_PATH);
+    std::ofstream fileHistoryOut(INITIAL_FILE_HISTORY_PATH);
+    fileHistoryOut << fileHistoryJson.dump(4);
+    fileHistoryOut.close();
+
+    /*std::ofstream fileHistoryOut(STAGED_FILE_HISTORY_PATH);
     fileHistoryOut << fileHistoryJson.dump(4);
     fileHistoryOut.close();
 
@@ -184,12 +211,38 @@ void FileHistoryManager::initializeRepo() {    // Iterates the entire repository
     hashMapOut << hashMapJson.dump(4);
     hashMapOut.close();
 
+    std::ofstream fileHistoryOut(COMMITTED_FILE_HISTORY_PATH);
+    fileHistoryOut << fileHistoryJson.dump(4);
+    fileHistoryOut.close();
+
+    std::ofstream hashMapOut(COMMITTED_HASH_MAP_PATH);
+    hashMapOut << hashMapJson.dump(4);
+    hashMapOut.close();*/
+
     std::cout << "Scanned and stored initial file versions." << std::endl;
 }
 
 
 
 void FileHistoryManager::addFileVersion(const string& filename) {  //Adds the new version of the file to the doubly linked list
+    
+    if(filename == "."){
+        initializeRepo();
+        vector<string> modified;
+
+        for (const auto& entry : fileHistoryMapInitial) {
+            std::string filename = entry.first;
+            if(isFileModified(filename)) {
+                modified.push_back(filename);
+            }
+        }
+
+        for(const string file: modified) {
+            addFileVersion(file);
+        }
+        std::cout << "Staged all modified files.\n";
+        return;
+    }
     string content = readFileContent(filename);
     if(content.empty()){
         std::cerr << "No content in the file!! : " <<filename << std::endl;
@@ -197,8 +250,8 @@ void FileHistoryManager::addFileVersion(const string& filename) {  //Adds the ne
     }
     string newHash = calculateFileHash(content);
 
-    if (fileHistoryMap.find(filename) != fileHistoryMap.end()) {   // CHECKING IF THE FILE ALREADY EXISTS
-        FileVersion* lastVersion = fileHistoryMap[filename];
+    if (fileHistoryMapStaged.find(filename) != fileHistoryMapStaged.end()) {   // CHECKING IF THE FILE ALREADY EXISTS
+        FileVersion* lastVersion = fileHistoryMapStaged[filename];
         if (lastVersion->hash == newHash) {
             std::cout << filename << " has no changes.\n";
             return;
@@ -207,18 +260,21 @@ void FileHistoryManager::addFileVersion(const string& filename) {  //Adds the ne
         FileVersion* newVersion = new FileVersion(newHash);  // Linking the new has version of the file
         newVersion->prev = lastVersion;
         lastVersion->next = newVersion;
-        fileHistoryMap[filename] = newVersion;
+        fileHistoryMapStaged[filename] = newVersion;
     } else {
-        fileHistoryMap[filename] = new FileVersion(newHash);
+        fileHistoryMapStaged[filename] = new FileVersion(newHash);
     }
 
-    hashMap[newHash] = content;
-    saveToDisk();
+    hashMapStaged[newHash] = content;
+    saveToDisk(fileHistoryMapStaged, hashMapStaged);
     std::cout << "Added " << filename << " with hash " << newHash << "\n";
 }
 
-string FileHistoryManager::getLatestHash(const string& filename) {
-    return fileHistoryMap.find(filename) != fileHistoryMap.end() ? fileHistoryMap[filename]->hash : "";
+string FileHistoryManager::getLatestHashStaged(const string& filename) {
+    return fileHistoryMapStaged.find(filename) != fileHistoryMapStaged.end() ? fileHistoryMapStaged[filename]->hash : "";
+}
+string FileHistoryManager::getLatestHashCommitted(const string& filename) {
+    return fileHistoryMapCommitted.find(filename) != fileHistoryMapCommitted.end() ? fileHistoryMapCommitted[filename]->hash : "";
 }
 
 /* fileHistoryMap.find(filename) != fileHistoryMap.end() 
@@ -228,31 +284,55 @@ string FileHistoryManager::getLatestHash(const string& filename) {
 */
 
 
+
 bool FileHistoryManager::isFileModified(const string& filename) {
     std::string content = readFileContent(filename);
     std::string newHash = calculateFileHash(content);
-    return getLatestHash(filename) != newHash;  // Checking if the current hash of the file is the same as the new hash
+    return getLatestHashCommitted(filename) != newHash;  // Checking if the current hash of the file is the same as the new hash
 }
 
-void FileHistoryManager::showStatus() {
-    vector<string> modified;
-    //vector<string> unmodified;
-    for (const auto& entry : fileHistoryMap) {
-        std::string filename = entry.first;
-        if (isFileModified(filename)) {
-            modified.push_back(filename);
-        } /*else {
-            unmodified.push_back(filename);
-        }*/
+bool FileHistoryManager::isFileStaged(const string& filename) {
+    if (fileHistoryMapStaged.find(filename) == fileHistoryMapStaged.end()){
+        return false;
     }
+        
+    std::string content = readFileContent(filename);
+    std::string newHash = calculateFileHash(content);
+    return getLatestHashStaged(filename) == newHash;
+}
+
+
+void FileHistoryManager::showStatus() {
+
+    initializeRepo();
+
+    vector<string> modified;
+    vector<string> staged;
+    //vector<string> untrackedFiles;
+
+    
+    std::cout << "fileHistoryMapInitial size: " << fileHistoryMapInitial.size() << std::endl;
+
+
+    for (const auto& entry : fileHistoryMapInitial) {
+        std::string filename = entry.first;
+        if(isFileStaged(filename)) {
+            staged.push_back(filename);
+        }
+        else if(isFileModified(filename)) {
+            modified.push_back(filename);
+        }
+
+    }
+
+    std::cout << GREEN << "Staged files: "; 
+    for(const string file : staged) {
+        std::cout << file << " ";
+    }
+    std::cout << "\n";
     std::cout << RED << "Modified files: ";
     for(const string file: modified) {
         std::cout << file << " ";
     }
     std::cout << "\n" << RESET;
-    /*std::cout << "Unmodified files: "; 
-    for(const string file : unmodified) {
-        std::cout << file << " ";
-    }*/
-    std::cout << "\n";
 }

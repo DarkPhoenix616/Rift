@@ -256,3 +256,13 @@ void FileHistoryManager::showStatus() {
     }*/
     std::cout << "\n";
 }
+
+std::unordered_map<std::string, std::string> FileHistoryManager::getAllStagedFiles() {
+    std::unordered_map<std::string, std::string> stagedFiles;
+    
+    for (const auto& [filename, versionPtr] : fileHistoryMap) {
+        stagedFiles[filename] = versionPtr->hash;
+    }
+    
+    return stagedFiles;
+}

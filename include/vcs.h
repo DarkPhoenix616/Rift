@@ -9,6 +9,8 @@
 
 class VCS{
     private:
+        FileHistoryManager fileManager;
+        CommitManager commitManager;
         
     public:
         VCS();
@@ -16,6 +18,11 @@ class VCS{
         void init();
         void add(const string& filename);
         void status();
+        void commit(const std::string& message);
+        void log(int limit = 0);
+        void branch(const std::string& branchName);
+        void checkout(const std::string& branchName);
+        void branches();
 };
 
 #endif

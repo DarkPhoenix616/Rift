@@ -26,6 +26,9 @@ class FileHistoryManager {
         void loadFromDisk();
         void saveToDisk();
         void initializeRepo();
+
+        std::unordered_map<std::string, std::string> getAllStagedFiles();
+
 };
 
 #endif

@@ -2,14 +2,27 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <filesystem>
 
 using namespace std;
+namespace fs = std::filesystem;
 
 int main(int argc, char *argv[]){
     /*if(string(argv[0]) != "Rift" ){
+    // Extract just the filename without path
+    string programName = fs::path(argv[0]).filename().string();
+    
+    // Check if it starts with "Rift" (allows for both "Rift" and "Rift.exe")
+    if(programName.find("Rift") != 0){
         cerr << "Error: Invalid VCS!! " << std::endl;
         return 1;
     }   */
+
+    // Check for required arguments
+    if(argc < 2) {
+        cerr << "Error: No command provided" << endl;
+        return 1;
+    }
 
     string command1 = argv[1];
 
@@ -33,5 +46,6 @@ int main(int argc, char *argv[]){
         cerr << "Error: Invalid command!! " << endl;
         return 1;
     }
+    
+    return 0;
 }
-

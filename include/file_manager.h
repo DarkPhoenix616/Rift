@@ -15,13 +15,12 @@ struct FileVersion{     // Node of the doubly linkedlist storing the file versio
 };
 
 class FileHistoryManager {
-    private:
-        unordered_map<string, FileVersion*> fileHistoryMapCommitted;  
-        unordered_map<string, string> hashMapCommitted;                
     public:
         unordered_map<string, FileVersion*> fileHistoryMapInitial;   // Gets filled when repo is iniitalized
         unordered_map<string, FileVersion*> fileHistoryMapStaged;   // Key: File_name , Value: Latest version of the file
         unordered_map<string, string> hashMapStaged;                // Key: Hash of the file, Value: File Content
+        unordered_map<string, FileVersion*> fileHistoryMapCommitted;  
+        unordered_map<string, string> hashMapCommitted;                
 
 
         void addFileVersion(const std::string& filename);
@@ -33,6 +32,8 @@ class FileHistoryManager {
         void loadFromDisk(unordered_map<string, FileVersion*>& fileHistoryMap, unordered_map<string, string>& hashMap);
         void saveToDisk(unordered_map<string, FileVersion*>& fileHistoryMap, unordered_map<string, string>& hashMap);
         void initializeRepo();
+        string base64_encode(const std::string &data);
+        string base64_decode(const std::string &encoded);
         //void updateForNewFiles(std::vector<std::string>& untrackedFiles);
 };
 

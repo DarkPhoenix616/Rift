@@ -14,10 +14,10 @@ using json = nlohmann::json;
 namespace fs = std::filesystem;
 
 const string INITIAL_FILE_HISTORY_PATH = "./data/.vcs/initial_file_history.json";
-const string STAGED_FILE_HISTORY_PATH = "./data/.vcs/Staged State/file_history.json";
-const string STAGED_HASH_MAP_PATH = "./data/.vcs/Staged State/hash_map.json";
-const string COMMITTED_FILE_HISTORY_PATH = "./data/.vcs/Committed State/file_history.json";
-const string COMMITTED_HASH_MAP_PATH = "./data/.vcs/Committed State/hash_map.json";
+const string STAGED_FILE_HISTORY_PATH = "./data/.vcs/main/Staged State/file_history.json";
+const string STAGED_HASH_MAP_PATH = "./data/.vcs/main/Staged State/hash_map.json";
+const string COMMITTED_FILE_HISTORY_PATH = "./data/.vcs/main/";
+const string COMMITTED_HASH_MAP_PATH = "./data/.vcs/main/Committed State/hash_map.json";
 
 #define RED     "\033[31m"
 #define RESET   "\033[0m"
@@ -50,7 +50,7 @@ string readFileContent(const string& filename) {
 /* Basically, JSON expects valid UTF-8 strings so if a file has invalid characters, it crashes,
 so we use this function to encode the file content in Base64 before storing it in JSON.
 This ensures compatibility with binary files and prevents crashes due to invalid UTF-8 characters*/
-string base64_encode(const std::string &data) {
+string FileHistoryManager::base64_encode(const std::string &data) {
     static const std::string base64_chars =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -73,7 +73,7 @@ string base64_encode(const std::string &data) {
     return encoded;
 }
 
-string base64_decode(const std::string &encoded) {
+string FileHistoryManager::base64_decode(const std::string &encoded) {
     static const std::string base64_chars =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     
@@ -128,6 +128,7 @@ void FileHistoryManager::loadFromDisk(unordered_map<string, FileVersion*>& fileH
     std::ifstream fileHistoryIn(STAGED_FILE_HISTORY_PATH);
     std::ifstream hashMapIn(STAGED_HASH_MAP_PATH);
     std::ifstream fileHistoryInitialIn(INITIAL_FILE_HISTORY_PATH);
+    
 
     json initialFileHistoryJson;
     fileHistoryInitialIn >> initialFileHistoryJson;
@@ -142,7 +143,7 @@ void FileHistoryManager::loadFromDisk(unordered_map<string, FileVersion*>& fileH
         fileHistoryMapInitial[filename] = new FileVersion(fileHash);
     }
 
-    if (!fileHistoryIn || !hashMapIn) {
+    if (!fileHistoryIn || !hashMapIn ) {
         std::cerr << "No previous repository data found." << std::endl;
         return;
     }
@@ -258,8 +259,8 @@ void FileHistoryManager::addFileVersion(const string& filename) {  //Adds the ne
         }
         
         FileVersion* newVersion = new FileVersion(newHash);  // Linking the new has version of the file
-        newVersion->prev = lastVersion;
-        lastVersion->next = newVersion;
+        // newVersion->prev = lastVersion;
+        // lastVersion->next = newVersion;
         fileHistoryMapStaged[filename] = newVersion;
     } else {
         fileHistoryMapStaged[filename] = new FileVersion(newHash);
@@ -304,14 +305,14 @@ bool FileHistoryManager::isFileStaged(const string& filename) {
 
 void FileHistoryManager::showStatus() {
 
-    initializeRepo();
+    initializeRepo();   // SO that the initial File history map can be updates in case of new files in the directory
 
     vector<string> modified;
     vector<string> staged;
     //vector<string> untrackedFiles;
 
     
-    std::cout << "fileHistoryMapInitial size: " << fileHistoryMapInitial.size() << std::endl;
+    //std::cout << "fileHistoryMapInitial size: " << fileHistoryMapInitial.size() << std::endl;
 
 
     for (const auto& entry : fileHistoryMapInitial) {

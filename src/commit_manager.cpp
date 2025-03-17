@@ -176,7 +176,6 @@ void CommitManager::loadCommitsFromDisk(FileHistoryManager& fileHistoryManager){
         for(auto &entry : fileHistoryJsonCommitted.items()){
             std::string filename = entry.key();
             std::string fileHash = entry.value();
-            cout << "Testing Balu:: " << "Key : " << filename << "Value: " << fileHash;
             fileHistoryManager.fileHistoryMapCommitted[filename] = new FileVersion(fileHash);
         }
 

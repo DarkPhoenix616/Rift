@@ -8,6 +8,8 @@
 #include <sstream>
 #include <filesystem>
 #include <iomanip>
+#include <chrono>
+#include <ctime>
 
 using json = nlohmann::json;
 namespace fs = std::filesystem;
@@ -42,8 +44,11 @@ void CommitManager::addCommit(const string& message, FileHistoryManager& fileHis
 
     string commitHash = generateCommitHash(message);
 
+    time_t commitT = chrono::system_clock::to_time_t(chrono::system_clock::now());
+    std::tm* time_info = std::localtime(&commitT);
+    string commitTime = std::asctime(time_info);
     // Create a new commit node.
-    Commit* newCommit = new Commit(message, commitHash);
+    Commit* newCommit = new Commit(message, commitHash, commitTime);
 
     // Copy the current staged file versions from FileHistoryManager.
     // (Assuming fileHistoryManager.fileHistoryMapStaged holds filename -> latest FileVersion*,
@@ -98,12 +103,17 @@ void CommitManager::addCommit(const string& message, FileHistoryManager& fileHis
 }
 
 
-void CommitManager::displayCommitHistory() {
-    Commit* current = head;
+void CommitManager::displayCommitHistory(string branch) {
+    Commit* current = tail;
+    if(current == NULL){
+        std::cout << "No commits found" << std::endl;
+        return;
+    }
     while (current) {
         std::cout << "Commit Hash: " << current->commitHash
-                  << " | Message: " << current->message << std::endl;
-        current = current->next;
+                  << " | Message: " << current->message 
+                  << " | Date & Time: " << current->commitTime << std::endl;
+        current = current->prev;
     }
 }
 
@@ -122,6 +132,7 @@ void CommitManager::saveCommitsToDisk() {
         json j;
         j["message"] = current->message;
         j["commitHash"] = current->commitHash;
+        j["commitTime"] = current->commitTime;
         j["filesCommitted"] = current->filesCommitted;
         commitArray.push_back(j);
         current = current->next;
@@ -151,9 +162,10 @@ void CommitManager::loadCommitsFromDisk(FileHistoryManager& fileHistoryManager){
     for (auto& j : commitArray) {
         string message = j["message"];
         string commitHash = j["commitHash"];
+        string commitTime = j["commitTime"];
         unordered_map<string, string> filesCommitted = j["filesCommitted"].get<unordered_map<string, string>>();
 
-        Commit* newCommit = new Commit(message, commitHash);
+        Commit* newCommit = new Commit(message, commitHash, commitTime);
         newCommit->filesCommitted = filesCommitted;
 
         // Append newCommit to the doubly linked list.

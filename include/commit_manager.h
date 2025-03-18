@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include "file_manager.h"
 #include <ctime>
+#include <ctime>
 
 using namespace std;
 
@@ -15,8 +16,9 @@ struct Commit {
     unordered_map<string , string> filesCommitted;
     Commit* prev;
     Commit* next;
+    string commitTime;
 
-    Commit(string m, string c): message(m), commitHash(c), prev(nullptr), next(nullptr)  {}
+    Commit(string m, string c, string commitTime): message(m), commitHash(c), commitTime(commitTime), prev(nullptr), next(nullptr)  {}
 };
 
 class CommitManager{
@@ -24,7 +26,6 @@ class CommitManager{
         Commit* head;   // Points to the first commit
         Commit* tail;   // Points to the latest commit
 
-        void loadCommitsFromDisk(FileHistoryManager& fileHistoryManager);
         void saveCommitsToDisk();
 
         string generateCommitHash(const string& message);  // Generating commit hash using message and time
@@ -35,11 +36,13 @@ class CommitManager{
 
         CommitManager(FileHistoryManager& fileHistoryManager);   // Constructor to initialize the commit manager
         ~CommitManager();   // Destructor to free memory
+
+        void loadCommitsFromDisk(FileHistoryManager& fileHistoryManager);
         
         
         void addCommit(const string& message, FileHistoryManager& fileHistoryManager);  
 
-        void displayCommitHistory();
+        void displayCommitHistory(string branch);
 
 };
 

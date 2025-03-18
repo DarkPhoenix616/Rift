@@ -30,11 +30,16 @@ int main(int argc, char *argv[]){
         string filename = argv[2];
         vcs.add(filename);
     } else if (command1 == "commit") {
-        cout << "Bruh" <<endl;
         if(command2 == "-m"){
-            cout << "Committing" <<endl;
             string message = command3;
             vcs.commit(message);
+        }
+        else if(command2 == "log"){
+            vcs.displayCommitHistory("main");
+        }
+        else{
+            cerr << "Error: Invalid command!! " << endl;
+            return 1;
         }
     } else {
         cerr << "Error: Invalid command!! " << endl;

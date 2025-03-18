@@ -17,6 +17,7 @@ class VCS{
         void status();
         void add(const string& filename);
         void commit(const string& message);
+        void displayCommitHistory(string branch);
 };
 
 #endif

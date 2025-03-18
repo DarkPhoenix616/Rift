@@ -56,6 +56,17 @@ void VCS::add(const string& filename){
 void VCS::commit(const string& message){
     FileHistoryManager fileHistoryManager;
     fileHistoryManager.loadFromDisk(fileHistoryManager.fileHistoryMapStaged, fileHistoryManager.hashMapStaged);    // Loading the previously stored data
+    if(fileHistoryManager.fileHistoryMapStaged.size() == 0){
+        std::cout << "Error: No files to commit" << std::endl;
+        return;
+    }
     CommitManager commitManager(fileHistoryManager);
     commitManager.addCommit(message, fileHistoryManager);
+}
+
+void VCS::displayCommitHistory(string branch){
+    FileHistoryManager fileHistoryManager;
+    fileHistoryManager.loadFromDisk(fileHistoryManager.fileHistoryMapCommitted, fileHistoryManager.hashMapCommitted);    // Loading the previously stored data
+    CommitManager commitManager(fileHistoryManager);
+    commitManager.displayCommitHistory(branch);
 }

@@ -57,6 +57,7 @@ Rift init
 - `Rift status` - Detects changes in the files and shows the status of your directory
 - `Rift add <filename>` - To add a specific filename to the staging area ('.' to add all the modified files)
 - `Rift commit -m <message>` - To create a commit (adding the staged files into the Committed State)
+- `Rift commit log` - To log the commit history from the most recent to the past ones
 
 
 ## 🛠 Cleaning Up

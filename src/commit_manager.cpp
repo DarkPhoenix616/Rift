@@ -283,7 +283,7 @@ void CommitManager::switchBranch(const std::string& branchName) {
     saveCommitLogToDisk();
 }
 
-// Get all branches
+// get all branches
 std::vector<std::string> CommitManager::getBranches() const {
     std::vector<std::string> branchList;
     for (const auto& [branch, _] : branches) {

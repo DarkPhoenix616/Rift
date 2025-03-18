@@ -246,11 +246,7 @@ string FileHistoryManager::getLatestHash(const string& filename) {
     return fileHistoryMap.find(filename) != fileHistoryMap.end() ? fileHistoryMap[filename]->hash : "";
 }
 
-/* fileHistoryMap.find(filename) != fileHistoryMap.end() 
-        For maps in cpp, the find() checks if the key is present in the map or not. 
-        If the key is present, it returns an iterator to the key-value pair,
-        else it returns an iterator to the end of the map.
-*/
+
 
 
 bool FileHistoryManager::isFileModified(const string& filename) {

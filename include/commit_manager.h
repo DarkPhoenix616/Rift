@@ -1,8 +1,8 @@
 #ifndef COMMIT_MANAGER_H
 #define COMMIT_MANAGER_H
 
+#include <iostream>
 #include <string>
-#include <vector>
 #include <unordered_map>
 #include "file_manager.h"
 #include <ctime>
@@ -43,6 +43,7 @@ class CommitManager{
         void addCommit(const string& message, FileHistoryManager& fileHistoryManager);  
 
         void displayCommitHistory(string branch);
+
 };
 
 #endif

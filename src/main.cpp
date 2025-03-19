@@ -2,8 +2,25 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <filesystem>
 
 using namespace std;
+namespace fs = std::filesystem;
+
+void displayHelp() {
+    cout << "Rift - A simple version control system\n\n";
+    cout << "Commands:\n";
+    cout << "  init                   - Initialize a new repository\n";
+    cout << "  add <file>             - Add a file to the staging area\n";
+    cout << "  status                 - Show the status of files\n";
+    cout << "  commit -m \"message\"    - Commit staged changes\n";
+    cout << "  commit log                    - Show commit history\n";
+    cout << "  branch <name>          - Create a new branch\n";
+    cout << "  checkout <branch>      - Switch to a branch\n";
+    cout << "  branches               - List all branches\n";
+    cout << "  help                   - Display this help message\n";
+}
+
 
 int main(int argc, char *argv[]){
     /*if(string(argv[0]) != "Rift" ){
@@ -41,7 +58,10 @@ int main(int argc, char *argv[]){
             cerr << "Error: Invalid command!! " << endl;
             return 1;
         }
-    } else {
+    }  else if(command1 == "help"){
+        displayHelp();
+    }
+    else {
         cerr << "Error: Invalid command!! " << endl;
         return 1;
     }

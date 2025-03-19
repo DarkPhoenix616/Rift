@@ -70,3 +70,21 @@ void VCS::displayCommitHistory(string branch){
     CommitManager commitManager(fileHistoryManager);
     commitManager.displayCommitHistory(branch);
 }
+
+
+/*void VCS::checkout(const std::string& branchName) {
+    commitManager.switchBranch(branchName);
+}
+
+void VCS::branches() {
+    std::vector<std::string> branchList = commitManager.getBranches();
+    std::string currentBranch = commitManager.getCurrentBranch();
+    
+    std::cout << "\n----- Branches -----\n" << std::endl;
+    for(const auto& branch : branchList) {
+        if(branch == currentBranch) {
+            std::cout << "* " << branch << " (current)" << std::endl;
+        } else {
+            std::cout << "  " << branch << std::endl;
+        }
+    }*/

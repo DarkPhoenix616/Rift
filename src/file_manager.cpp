@@ -179,25 +179,35 @@ void FileHistoryManager::initializeRepo() {    // Iterates the entire repository
     json fileHistoryJson, hashMapJson;
 
     for (const auto &entry : fs::recursive_directory_iterator(".")) {
-        if (entry.is_regular_file()) {
-            std::string filePath = entry.path().string();
+    if (entry.is_regular_file()) {
+        std::string filePath = entry.path().string();
 
-            // Ignore files inside the .vcs directory
-            if (filePath.find("./data/.vcs") != std::string::npos) continue;
-
-            std::string content = readFileContent(filePath);
-            if (content.empty()) continue; // Ignore empty files
-
-            std::string fileHash = calculateFileHash(content);
-            std::string relativePath = filePath.substr(2); // Remove "./" from path
-
-            fileHistoryMapInitial[relativePath] = new FileVersion(fileHash);
-
-            // Store in JSON with Base64 encoding
-            fileHistoryJson[relativePath] = fileHash;
-            hashMapJson[fileHash] = base64_encode(content);
+        // Iterate over each part of the path and skip if any equals ".git" or "./data/.vcs"
+        bool skip = false;
+        for (const auto &part : entry.path()) {
+            if (part == ".git" || part == ".vcs") {
+                skip = true;
+                break;
+            }
         }
+        if (skip)
+            continue;
+
+        std::string content = readFileContent(filePath);
+        if (content.empty())
+            continue; // Ignore empty files
+
+        std::string fileHash = calculateFileHash(content);
+        std::string relativePath = filePath.substr(2); // Remove "./" from path
+
+        fileHistoryMapInitial[relativePath] = new FileVersion(fileHash);
+
+        // Store in JSON with Base64 encoding
+        fileHistoryJson[relativePath] = fileHash;
+        hashMapJson[fileHash] = base64_encode(content);
     }
+}
+
 
     // Save to JSON files
     std::ofstream fileHistoryOut(INITIAL_FILE_HISTORY_PATH);
@@ -326,14 +336,14 @@ void FileHistoryManager::showStatus() {
 
     }
 
-    std::cout << GREEN << "Staged files: "; 
+    std::cout << GREEN << "Staged files: \n"; 
     for(const string file : staged) {
-        std::cout << file << " ";
+        std::cout << file << " \n";
     }
     std::cout << "\n";
-    std::cout << RED << "Modified files: ";
+    std::cout << RED << "Modified files: \n";
     for(const string file: modified) {
-        std::cout << file << " ";
+        std::cout << file << " \n";
     }
     std::cout << "\n" << RESET;
 }

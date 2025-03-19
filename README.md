@@ -21,7 +21,7 @@ cd rift
 
 ## ⚙️ Building the Project
 
-This project uses a `Makefile` to compile the source code and a 'dependencies.mk' to install the required dependencies. To build the executable, run:
+This project uses a `Makefile` to compile the source code and a 'dependencies.mk' to install the required dependencies. For Ios, to build the executable, run:
 
 ```sh
 make -f dependencies.mk install
@@ -30,6 +30,81 @@ make -f dependencies.mk install
 ```sh
 make
 ```
+
+For windows, replace the Makefiles with these: 
+```
+# Detect OS
+OS := $(shell uname -s)
+
+# Install dependencies (Windows using MSYS2)
+install:
+ifeq ($(OS), MINGW64_NT)
+	@echo "Installing dependencies using MSYS2 (MinGW)..."
+	pacman -S --noconfirm mingw-w64-x86_64-nlohmann-json mingw-w64-x86_64-openssl
+endif
+
+.PHONY: install
+```
+
+```
+# Compiler and Flags
+CXX = g++
+CXXFLAGS = -Wall -std=c++17 -g -Iinclude -IC:/msys64/mingw64/include/nlohmann-json
+LDFLAGS = -LC:/msys64/mingw64/lib -lssl -lcrypto
+CPPFLAGS = -IC:/msys64/mingw64/include
+
+# Directories
+SRC_DIR = src
+OBJ_DIR = obj
+INCLUDE_DIR = include
+
+# Source and Header Files
+SRC_FILES = $(wildcard $(SRC_DIR)/*.cpp)
+OBJ_FILES = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRC_FILES))
+HEADERS = $(wildcard $(INCLUDE_DIR)/*.h)
+
+# Output Executable Name
+TARGET = Rift.exe
+
+# Default rule
+all: $(TARGET)
+
+# Build Executable
+$(TARGET): $(OBJ_FILES)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJ_FILES) $(LDFLAGS)
+
+# Build object files
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(HEADERS) | $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
+
+# Create obj directory if not exists
+$(OBJ_DIR):
+	mkdir $(OBJ_DIR)
+
+# Clean build files
+clean:
+	del /Q /F $(OBJ_DIR)\*.o $(TARGET) 2>nul || exit 0
+	rmdir /S /Q $(OBJ_DIR) 2>nul || exit 0
+
+# Run executable
+run: $(TARGET)
+	$(TARGET)
+
+# Dependencies
+deps:
+	@echo "To install dependencies, run: mingw32-make -f dependencies.mk install"
+
+.PHONY: all clean run deps
+
+```
+
+To run, 
+```
+mingw32-make -f dependencies.mk install  # Install dependencies
+mingw32-make                             # Compile the code
+mingw32-make run                         # Run the executable
+```
+
 
 This will generate the `Rift` executable in the project directory.
 

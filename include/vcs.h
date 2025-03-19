@@ -15,14 +15,19 @@ class VCS{
     public:
         VCS();
 
-        void init();
-        void add(const string& filename);
-        void status();
+        /*void status();
         void commit(const std::string& message);
         void log(int limit = 0);
         void branch(const std::string& branchName);
         void checkout(const std::string& branchName);
-        void branches();
+        void branches();*/
+  
+        void init();
+        void status();
+        void add(const string& filename);
+        void commit(const string& message);
+        void displayCommitHistory(string branch);
+
 };
 
 #endif

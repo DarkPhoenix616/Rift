@@ -14,85 +14,57 @@ void displayHelp() {
     cout << "  add <file>             - Add a file to the staging area\n";
     cout << "  status                 - Show the status of files\n";
     cout << "  commit -m \"message\"    - Commit staged changes\n";
-    cout << "  log                    - Show commit history\n";
+    cout << "  commit log                    - Show commit history\n";
     cout << "  branch <name>          - Create a new branch\n";
     cout << "  checkout <branch>      - Switch to a branch\n";
     cout << "  branches               - List all branches\n";
     cout << "  help                   - Display this help message\n";
 }
 
+
 int main(int argc, char *argv[]){
-    // Check for required arguments
-    if(argc < 2) {
-        cerr << "Error: No command provided" << endl;
-        displayHelp();
+    /*if(string(argv[0]) != "Rift" ){
+        cerr << "Error: Invalid VCS!! " << std::endl;
         return 1;
-    }
+    }   */
 
-    string command = argv[1];
+    string command1 = argv[1];
+    string command2, command3;
+
+    if(argc >= 3)
+        command2 = argv[2];
+    
+    if(argc >= 4)
+        command3 = argv[3];
+
     VCS vcs;
-
-    if(command == "init"){
+    
+    if (command1 == "init") {
         vcs.init();
-    }
-    else if(command == "add"){
-        if(argc < 3) {
-            cerr << "Error: No file specified" << endl;
-            return 1;
-        }
+    } else if (command1 == "status") {
+        vcs.status();
+    } else if (command1 == "add") {
         string filename = argv[2];
         vcs.add(filename);
-    }
-    else if(command == "status"){
-        vcs.status();
-    }
-    else if(command == "commit"){
-        if(argc < 4 || string(argv[2]) != "-m") {
-            cerr << "Error: Commit requires a message (-m \"message\")" << endl;
+    } else if (command1 == "commit") {
+        if(command2 == "-m"){
+            string message = command3;
+            vcs.commit(message);
+        }
+        else if(command2 == "log"){
+            vcs.displayCommitHistory("main");
+        }
+        else{
+            cerr << "Error: Invalid command!! " << endl;
             return 1;
         }
-        string message = argv[3];
-        vcs.commit(message);
-    }
-    else if(command == "log"){
-        int limit = 0;
-        if(argc > 2) {
-            try {
-                limit = stoi(argv[2]);
-            } catch(...) {
-                // If conversion fails, show all commits
-                limit = 0;
-            }
-        }
-        vcs.log(limit);
-    }
-    else if(command == "branch"){
-        if(argc < 3) {
-            cerr << "Error: No branch name specified" << endl;
-            return 1;
-        }
-        string branchName = argv[2];
-        vcs.branch(branchName);
-    }
-    else if(command == "checkout"){
-        if(argc < 3) {
-            cerr << "Error: No branch name specified" << endl;
-            return 1;
-        }
-        string branchName = argv[2];
-        vcs.checkout(branchName);
-    }
-    else if(command == "branches"){
-        vcs.branches();
-    }
-    else if(command == "help"){
+    }  else if(command1 == "help"){
         displayHelp();
     }
-    else{
-        cerr << "Error: Invalid command: " << command << endl;
-        displayHelp();
+    else {
+        cerr << "Error: Invalid command!! " << endl;
         return 1;
     }
-    
-    return 0;
+
 }
+

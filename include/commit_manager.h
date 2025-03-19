@@ -4,44 +4,45 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include <chrono>
+#include "file_manager.h"
+#include <ctime>
+#include <ctime>
 
-class CommitNode {
-public:
-    std::string commitHash;
-    std::string message;
-    std::string timestamp;
-    std::unordered_map<std::string, std::string> fileVersions; // filename -> hash
-    CommitNode* parent;
-    
-    CommitNode(std::string hash, std::string msg, CommitNode* p = nullptr);
+using namespace std;
+
+struct Commit {
+    string message;
+    string commitHash;
+    unordered_map<string , string> filesCommitted;
+    Commit* prev;
+    Commit* next;
+    string commitTime;
+
+    Commit(string m, string c, string commitTime): message(m), commitHash(c), commitTime(commitTime), prev(nullptr), next(nullptr)  {}
 };
 
-class CommitManager {
-private:
-    CommitNode* headCommit;
-    std::string currentBranch;
-    std::unordered_map<std::string, CommitNode*> branches; // branch name -> commit pointer
-    
-    std::string generateCommitHash(const std::unordered_map<std::string, std::string>& fileVersions,
-                                 const std::string& message,
-                                 const std::string& timestamp);
-    void saveCommitToDisk(CommitNode* commit);
-    void saveCommitLogToDisk();
+class CommitManager{
+    private:
+        Commit* head;   // Points to the first commit
+        Commit* tail;   // Points to the latest commit
 
-public:
-    CommitManager();
-    ~CommitManager();
-    
-    void loadFromDisk();
-    std::string commit(const std::unordered_map<std::string, std::string>& fileVersions, 
-                     const std::string& message);
-    void showLog(int limit = 0);
-    CommitNode* getHead() const;
-    std::string getCurrentBranch() const;
-    void createBranch(const std::string& branchName);
-    void switchBranch(const std::string& branchName);
-    std::vector<std::string> getBranches() const;
+        void saveCommitsToDisk();
+
+        string generateCommitHash(const string& message);  // Generating commit hash using message and time
+
+    public:
+        // unordered_map<string, FileVersion*> fileHistoryMapCommitted;  
+        // unordered_map<string, string> hashMapCommitted;    
+
+        CommitManager(FileHistoryManager& fileHistoryManager);   // Constructor to initialize the commit manager
+        ~CommitManager();   // Destructor to free memory
+
+        void loadCommitsFromDisk(FileHistoryManager& fileHistoryManager);
+        
+        
+        void addCommit(const string& message, FileHistoryManager& fileHistoryManager);  
+
+        void displayCommitHistory(string branch);
 };
 
 #endif

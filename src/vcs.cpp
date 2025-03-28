@@ -42,6 +42,50 @@ void VCS::status(){
     CommitManager CommitManager(fileHistoryManager);
     fileHistoryManager.showStatus();
 }
+void VCS::config(const std::string& option, const std::string& value) {
+    if (option == "--set-api-key") {
+        geminiHelper.setApiKey(value);
+        std::cout << "Gemini API key has been set successfully." << std::endl;
+    } else if (option == "--check-api-key") {
+        if (geminiHelper.hasApiKey()) {
+            std::cout << "Gemini API key is configured." << std::endl;
+        } else {
+            std::cout << "Gemini API key is not configured. Use 'Rift config --set-api-key <key>' to set it." << std::endl;
+        }
+    } else {
+        std::cout << "Unknown configuration option: " << option << std::endl;
+        std::cout << "Available options: --set-api-key, --check-api-key" << std::endl;
+    }
+}
+
+void VCS::suggestCommands(const std::string& invalidCommand) {
+    if (!geminiHelper.hasApiKey()) {
+        std::cout << "Command not recognized. To get intelligent suggestions, set your Gemini API key:" << std::endl;
+        std::cout << "  Rift config --set-api-key <your-api-key>" << std::endl;
+        return;
+    }
+    
+    std::cout << "Command not recognized. Fetching suggestions..." << std::endl;
+    std::vector<std::string> suggestions = geminiHelper.getSuggestions(invalidCommand);
+    
+    if (suggestions.empty()) {
+        std::cout << "No suggestions available. Valid commands include:" << std::endl;
+        std::cout << "  - init: Initialize a new repository" << std::endl;
+        std::cout << "  - status: Show the current status of the repository" << std::endl;
+        std::cout << "  - add <filename>: Add a file to the staging area" << std::endl;
+        std::cout << "  - commit -m <message>: Commit changes with a message" << std::endl;
+        std::cout << "  - commit log: Show commit history" << std::endl;
+    } else {
+        std::cout << "Did you mean:" << std::endl;
+        for (const auto& suggestion : suggestions) {
+            std::cout << "  - " << suggestion << std::endl;
+        }
+    }
+}
+
+bool VCS::hasApiKey() const {
+    return geminiHelper.hasApiKey();
+}
 
 void VCS::add(const string& filename){
     FileHistoryManager fileHistoryManager;

@@ -1,18 +1,11 @@
 # Detect OS
 OS := $(shell uname -s)
 
-# Install dependencies (cross-platform)
+# Install dependencies (Windows using MSYS2)
 install:
-ifeq ($(OS), Darwin)  # macOS
-	brew install nlohmann-json openssl
-endif
-ifeq ($(OS), Linux)
-	sudo apt-get install -y nlohmann-json3-dev libssl-dev
-endif
-ifeq ($(OS), Windows_NT)
-	@echo "Please install dependencies manually:"
-	@echo " - nlohmann-json (https://github.com/nlohmann/json)"
-	@echo " - OpenSSL (https://slproweb.com/products/Win32OpenSSL.html)"
+ifeq ($(OS), MINGW64_NT)
+	@echo "Installing dependencies using MSYS2 (MinGW)..."
+	pacman -S --noconfirm mingw-w64-x86_64-nlohmann-json mingw-w64-x86_64-openssl mingw-w64-x86_64-curl
 endif
 
 .PHONY: install

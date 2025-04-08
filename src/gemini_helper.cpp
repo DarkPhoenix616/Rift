@@ -1,25 +1,33 @@
-#ifdef _WIN32
-#define _ENABLE_EXTENDED_ALIGNED_STORAGE
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#undef byte
+#ifdef _WIN32     // For making this cross platform, ie work on both windows and macOs
+    #include <windows.h>    
+#else
+    #include <mach-o/dyld.h>
 #endif
-
-#include "../include/gemini_helper.h"
+#include <vector> 
+#include "embedded_api_key.h"
+#include <filesystem>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <filesystem>
+#include <vector>
+#include <stdexcept>
+#include <curl/curl.h>
+#include <nlohmann/json.hpp>
 
-namespace fs = std::filesystem;
+using namespace std;
+namespace fs = std::filesystem; // For older toolchains, consider: namespace fs = std::experimental::filesystem;
+using json = nlohmann::json;
+
+#include "gemini_helper.h"  // Ensure this header declares the GeminiHelper class and its members
 
 // Static callback function for libcurl
 size_t GeminiHelper::WriteCallback(void* contents, size_t size, size_t nmemb, string* s) {
     size_t newLength = size * nmemb;
     try {
-        s->append((char*)contents, newLength);
+        s->append(static_cast<char*>(contents), newLength);
         return newLength;
-    } catch(std::bad_alloc &e) {
+    } catch (std::bad_alloc& e) {
         return 0;
     }
 }
@@ -29,17 +37,13 @@ GeminiHelper::GeminiHelper() {
     loadApiKey();
 }
 
-void GeminiHelper::setApiKey(const string& key) {
-    apiKey = key;
-    saveApiKey(key);
-}
 
 bool GeminiHelper::hasApiKey() const {
     return !apiKey.empty();
 }
 
 string GeminiHelper::formatPrompt(const string& userCommand) {
-    std::ostringstream prompt;
+    ostringstream prompt;
     prompt << "I'm using a version control system called Rift (similar to Git). "
            << "I tried to use this command: '" << userCommand << "'. "
            << "Suggest valid Rift commands that might be what I was trying to use. "
@@ -52,24 +56,20 @@ vector<string> GeminiHelper::parseResponse(const string& response) {
     vector<string> suggestions;
     try {
         json responseJson = json::parse(response);
-        
-        if (responseJson.contains("candidates") && responseJson["candidates"].is_array() && 
-            !responseJson["candidates"].empty()) {
-            
+        if (responseJson.contains("candidates") &&
+            responseJson["candidates"].is_array() &&
+            !responseJson["candidates"].empty())
+        {
             auto candidate = responseJson["candidates"][0];
             if (candidate.contains("content") && candidate["content"].contains("parts")) {
                 auto parts = candidate["content"]["parts"];
                 if (parts.is_array() && !parts.empty()) {
                     string textContent = parts[0]["text"];
-                    
-                    
                     size_t startPos = textContent.find('[');
                     size_t endPos = textContent.rfind(']');
-                    
                     if (startPos != string::npos && endPos != string::npos && startPos < endPos) {
                         string jsonArrayStr = textContent.substr(startPos, endPos - startPos + 1);
                         json suggestionArray = json::parse(jsonArrayStr);
-                        
                         if (suggestionArray.is_array()) {
                             for (const auto& suggestion : suggestionArray) {
                                 if (suggestion.is_string()) {
@@ -82,15 +82,14 @@ vector<string> GeminiHelper::parseResponse(const string& response) {
             }
         }
     } catch (const std::exception& e) {
-        std::cerr << "Error parsing Gemini response: " << e.what() << std::endl;
+        cerr << "Error parsing Gemini response: " << e.what() << endl;
     }
-    
     return suggestions;
 }
 
 vector<string> GeminiHelper::getSuggestions(const string& userCommand) {
     if (apiKey.empty()) {
-        std::cerr << "API key not set. Use 'Rift config --set-api-key <key>' to set your Gemini API key." << std::endl;
+        cerr << "API key not set. Generate your API key and set it in your .env file" << endl;
         return {};
     }
     
@@ -105,11 +104,10 @@ vector<string> GeminiHelper::getSuggestions(const string& userCommand) {
         json payload = {
             {"contents", {
                 {"parts", {
-                    {"text", formatPrompt(userCommand)}
+                    {{"text", formatPrompt(userCommand)}}
                 }}
             }}
         };
-        
         string jsonPayload = payload.dump();
         
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
@@ -118,14 +116,13 @@ vector<string> GeminiHelper::getSuggestions(const string& userCommand) {
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonPayload.c_str());
         
         // Set headers
-        struct curl_slist* headers = NULL;
+        struct curl_slist* headers = nullptr;
         headers = curl_slist_append(headers, "Content-Type: application/json");
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
         
         CURLcode res = curl_easy_perform(curl);
-        
         if (res != CURLE_OK) {
-            std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+            cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << endl;
         } else {
             suggestions = parseResponse(readBuffer);
         }
@@ -137,45 +134,12 @@ vector<string> GeminiHelper::getSuggestions(const string& userCommand) {
     return suggestions;
 }
 
+
 bool GeminiHelper::loadApiKey() {
-    // Create config directory if it doesn't exist
-    fs::path configDir = fs::path("./data/.vcs/config");
-    fs::path apiKeyFile = configDir / "gemini_api_key.txt";
-    
-    if (!fs::exists(configDir)) {
-        fs::create_directories(configDir);
-    }
-    
-    if (!fs::exists(apiKeyFile)) {
-        return false;
-    }
-    
-    std::ifstream file(apiKeyFile);
-    if (!file.is_open()) {
-        return false;
-    }
-    
-    std::getline(file, apiKey);
-    file.close();
-    
-    return !apiKey.empty();
+    apiKey = EMBEDDED_GEMINI_API_KEY;  // Set from compiled-in constant
+    std::cout << "Loaded embedded API key." << std::endl;
+    return !apiKey.empty();  // Return true if it was loaded
 }
 
-bool GeminiHelper::saveApiKey(const string& key) {
-    fs::path configDir = fs::path("./data/.vcs/config");
-    fs::path apiKeyFile = configDir / "gemini_api_key.txt";
-    
-    if (!fs::exists(configDir)) {
-        fs::create_directories(configDir);
-    }
-    
-    std::ofstream file(apiKeyFile);
-    if (!file.is_open()) {
-        return false;
-    }
-    
-    file << key;
-    file.close();
-    
-    return true;
-}
+
+

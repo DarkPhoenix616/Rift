@@ -1,12 +1,6 @@
 #ifndef GEMINI_HELPER_H
 #define GEMINI_HELPER_H
 
-// Prevent std::byte to avoid conflicts with Windows headers
-#define _ENABLE_EXTENDED_ALIGNED_STORAGE
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#undef byte
-
 #include <string>
 #include <vector>
 #include <curl/curl.h>
@@ -26,14 +20,10 @@ private:
     
 public:
     GeminiHelper();
-    void setApiKey(const string& key);
     bool hasApiKey() const;
     vector<string> getSuggestions(const string& userCommand);
     
-    // Load API key from config file
     bool loadApiKey();
-    // Save API key to config file
-    bool saveApiKey(const string& key);
 };
 
 #endif

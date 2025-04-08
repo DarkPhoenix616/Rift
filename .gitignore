@@ -48,3 +48,5 @@ data/random
 data/suii
 
 Rift
+.env
+embedded_api_key.h

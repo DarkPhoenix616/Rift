@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <filesystem>
 #include <fstream>
+#include <unistd.h>
 
 //using namespace std;
 namespace fs = std::filesystem;
@@ -23,8 +24,7 @@ void VCS::init(){
         fs::create_directory("./data/.vcs/main/Committed State");
         //std::ofstream commitFile("./data/.vcs/main/Committed State/commits.log");
         fs::create_directory("./data/.vcs/main/Staged State");
-        //fs::create_directory("./data/.vcs/Modified State");
-        //commitFile.close();
+
 
         FileHistoryManager fileHistoryManager;
         fileHistoryManager.initializeRepo(); 
@@ -42,26 +42,10 @@ void VCS::status(){
     CommitManager CommitManager(fileHistoryManager);
     fileHistoryManager.showStatus();
 }
-void VCS::config(const std::string& option, const std::string& value) {
-    if (option == "--set-api-key") {
-        geminiHelper.setApiKey(value);
-        std::cout << "Gemini API key has been set successfully." << std::endl;
-    } else if (option == "--check-api-key") {
-        if (geminiHelper.hasApiKey()) {
-            std::cout << "Gemini API key is configured." << std::endl;
-        } else {
-            std::cout << "Gemini API key is not configured. Use 'Rift config --set-api-key <key>' to set it." << std::endl;
-        }
-    } else {
-        std::cout << "Unknown configuration option: " << option << std::endl;
-        std::cout << "Available options: --set-api-key, --check-api-key" << std::endl;
-    }
-}
 
 void VCS::suggestCommands(const std::string& invalidCommand) {
     if (!geminiHelper.hasApiKey()) {
-        std::cout << "Command not recognized. To get intelligent suggestions, set your Gemini API key:" << std::endl;
-        std::cout << "  Rift config --set-api-key <your-api-key>" << std::endl;
+        std::cout << "Command not recognized. To get intelligent suggestions, generate your API key and set it in your .env file" << std::endl;
         return;
     }
     

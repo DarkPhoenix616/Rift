@@ -22,8 +22,6 @@ class VCS{
         void commit(const string& message);
         void displayCommitHistory(string branch);
         
-        // Configuration methods
-        void config(const std::string& option, const std::string& value);
         void suggestCommands(const std::string& invalidCommand);
         bool hasApiKey() const;
 };

@@ -3,12 +3,15 @@
 
 #include "commit_manager.h"
 #include "file_manager.h"
+#include "gemini_helper.h"
 
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 class VCS{
     private:
+        GeminiHelper geminiHelper;
         
     public:
         VCS();
@@ -18,6 +21,9 @@ class VCS{
         void add(const string& filename);
         void commit(const string& message);
         void displayCommitHistory(string branch);
+        
+        void suggestCommands(const std::string& invalidCommand);
+        bool hasApiKey() const;
 };
 
 #endif

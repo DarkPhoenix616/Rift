@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <filesystem>
 #include <fstream>
+#include <unistd.h>
 
 //using namespace std;
 namespace fs = std::filesystem;
@@ -23,8 +24,7 @@ void VCS::init(){
         fs::create_directory("./data/.vcs/main/Committed State");
         //std::ofstream commitFile("./data/.vcs/main/Committed State/commits.log");
         fs::create_directory("./data/.vcs/main/Staged State");
-        //fs::create_directory("./data/.vcs/Modified State");
-        //commitFile.close();
+
 
         FileHistoryManager fileHistoryManager;
         fileHistoryManager.initializeRepo(); 
@@ -41,6 +41,34 @@ void VCS::status(){
     fileHistoryManager.loadFromDisk(fileHistoryManager.fileHistoryMapStaged, fileHistoryManager.hashMapStaged); // First we transfer the data from the JSON files to the maps
     CommitManager CommitManager(fileHistoryManager);
     fileHistoryManager.showStatus();
+}
+
+void VCS::suggestCommands(const std::string& invalidCommand) {
+    if (!geminiHelper.hasApiKey()) {
+        std::cout << "Command not recognized. To get intelligent suggestions, generate your API key and set it in your .env file" << std::endl;
+        return;
+    }
+    
+    std::cout << "Command not recognized. Fetching suggestions..." << std::endl;
+    std::vector<std::string> suggestions = geminiHelper.getSuggestions(invalidCommand);
+    
+    if (suggestions.empty()) {
+        std::cout << "No suggestions available. Valid commands include:" << std::endl;
+        std::cout << "  - init: Initialize a new repository" << std::endl;
+        std::cout << "  - status: Show the current status of the repository" << std::endl;
+        std::cout << "  - add <filename>: Add a file to the staging area" << std::endl;
+        std::cout << "  - commit -m <message>: Commit changes with a message" << std::endl;
+        std::cout << "  - commit log: Show commit history" << std::endl;
+    } else {
+        std::cout << "Did you mean:" << std::endl;
+        for (const auto& suggestion : suggestions) {
+            std::cout << "  - " << suggestion << std::endl;
+        }
+    }
+}
+
+bool VCS::hasApiKey() const {
+    return geminiHelper.hasApiKey();
 }
 
 void VCS::add(const string& filename){

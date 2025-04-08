@@ -178,35 +178,43 @@ void FileHistoryManager::loadFromDisk(unordered_map<string, FileVersion*>& fileH
 void FileHistoryManager::initializeRepo() {    // Iterates the entire repository and allots initial hash values to the files
     json fileHistoryJson, hashMapJson;
 
-    for (const auto &entry : fs::recursive_directory_iterator(".")) {
-    if (entry.is_regular_file()) {
-        std::string filePath = entry.path().string();
-
-        // Iterate over each part of the path and skip if any equals ".git" or "./data/.vcs"
-        bool skip = false;
-        for (const auto &part : entry.path()) {
-            if (part == ".git" || part == ".vcs") {
-                skip = true;
-                break;
-            }
-        }
-        if (skip)
+    for (auto it = fs::recursive_directory_iterator("."); it != fs::recursive_directory_iterator(); ++it) {
+        // When encountering a directory named ".git" or ".vcs", skip its contents entirely.
+        if (it->is_directory() && (it->path().filename() == ".git" || it->path().filename() == ".vcs" || it->path().filename() == "node_modules")) {
+            it.disable_recursion_pending();
             continue;
-
-        std::string content = readFileContent(filePath);
-        if (content.empty())
-            continue; // Ignore empty files
-
-        std::string fileHash = calculateFileHash(content);
-        std::string relativePath = filePath.substr(2); // Remove "./" from path
-
-        fileHistoryMapInitial[relativePath] = new FileVersion(fileHash);
-
-        // Store in JSON with Base64 encoding
-        fileHistoryJson[relativePath] = fileHash;
-        hashMapJson[fileHash] = base64_encode(content);
+        }
+    
+        if (it->is_regular_file()) {
+            const auto &entry = *it;
+            std::string filePath = entry.path().string();
+    
+            // Iterate over each part of the path and skip if any equals ".git" or "./data/.vcs"
+            bool skip = false;
+            for (const auto &part : entry.path()) {
+                if (part == ".git" || part == ".vcs") {
+                    skip = true;
+                    break;
+                }
+            }
+            if (skip)
+                continue;
+    
+            std::string content = readFileContent(filePath);
+            if (content.empty())
+                continue; // Ignore empty files
+    
+            std::string fileHash = calculateFileHash(content);
+            std::string relativePath = filePath.substr(2); // Remove "./" from path
+    
+            fileHistoryMapInitial[relativePath] = new FileVersion(fileHash);
+    
+            // Store in JSON with Base64 encoding
+            fileHistoryJson[relativePath] = fileHash;
+            hashMapJson[fileHash] = base64_encode(content);
+        }
     }
-}
+    
 
 
     // Save to JSON files
@@ -231,7 +239,7 @@ void FileHistoryManager::initializeRepo() {    // Iterates the entire repository
     hashMapOut.close();*/
 
     std::cout << "Scanned and stored initial file versions." << std::endl;
-}
+} 
 
 
 

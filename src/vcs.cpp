@@ -1,6 +1,7 @@
 #include "../include/vcs.h"
 #include "../include/file_manager.h"
 #include "../include/commit_manager.h"
+#include "../include/branch_manager.h"
 
 #include <iostream>
 #include <string>
@@ -97,4 +98,14 @@ void VCS::displayCommitHistory(string branch){
     fileHistoryManager.loadFromDisk(fileHistoryManager.fileHistoryMapCommitted, fileHistoryManager.hashMapCommitted);    // Loading the previously stored data
     CommitManager commitManager(fileHistoryManager);
     commitManager.displayCommitHistory(branch);
+}
+
+void VCS::createBranch(const std::string &branchName) {
+    BranchManager branchManager;
+    branchManager.createBranch(branchName);
+}
+
+void VCS::switchBranch(const std::string &branchName) {
+    BranchManager branchManager;
+    branchManager.switchBranch(branchName);
 }

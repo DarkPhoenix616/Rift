@@ -47,7 +47,7 @@ string GeminiHelper::formatPrompt(const string& userCommand) {
     prompt << "I'm using a version control system called Rift (similar to Git). "
            << "I tried to use this command: '" << userCommand << "'. "
            << "Suggest valid Rift commands that might be what I was trying to use. "
-           << "Rift supports commands like: init, status, add, commit -m, commit log. "
+           << "Rift supports commands like: init, status, add, commit -m, commit log, branch create, branch switch,"
            << "Please respond with a JSON array of suggested commands only, with no additional text.";
     return prompt.str();
 }

@@ -24,7 +24,9 @@ void BranchManager::createBranch(const std::string& branchName) {
     fs::create_directory(branchPath + "/Staged State");
     fs::create_directory(branchPath + "/Committed State");
 
-    std::cout << "Branch '" << branchName << "' created." << std::endl;
+    switchBranch(branchName); // Switch to the new branch.
+
+    std::cout << "Branch '" << branchName << "' created and switched" << std::endl;
 }
 
 // Switch to the desired branch after checking that it exists.
@@ -47,7 +49,7 @@ std::string BranchManager::getCurrentBranch() {
         std::getline(headFile, currentBranch);
         headFile.close();
     }
-    return currentBranch.empty() ? "main" : currentBranch;
+    return currentBranch;
 }
 
 // Writes the given branch name to the HEAD file.

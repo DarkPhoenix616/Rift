@@ -1,5 +1,6 @@
 #include "../include/vcs.h"
 #include "../include/branch_manager.h"
+
 #include <iostream>
 #include <string>
 #include <vector>

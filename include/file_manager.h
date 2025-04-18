@@ -29,8 +29,8 @@ class FileHistoryManager {
         bool isFileModified(const std::string& filename);
         bool isFileStaged(const std::string& filename);
         void showStatus();
-        void loadFromDisk(unordered_map<string, FileVersion*>& fileHistoryMap, unordered_map<string, string>& hashMap);
-        void saveToDisk(unordered_map<string, FileVersion*>& fileHistoryMap, unordered_map<string, string>& hashMap);
+        void loadFromDisk(unordered_map<string, FileVersion*>& fileHistoryMap, unordered_map<string, string>& hashMap, string currentBranch);
+        void saveToDisk(unordered_map<string, FileVersion*>& fileHistoryMap, unordered_map<string, string>& hashMap, string currentBranch);
         void initializeRepo();
         string base64_encode(const std::string &data);
         string base64_decode(const std::string &encoded);

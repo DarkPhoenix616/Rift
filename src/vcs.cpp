@@ -1,6 +1,7 @@
 #include "../include/vcs.h"
 #include "../include/file_manager.h"
 #include "../include/commit_manager.h"
+#include "../include/branch_manager.h"
 
 #include <iostream>
 #include <string>
@@ -17,6 +18,7 @@ VCS::VCS(){
 }
 
 void VCS::init(){
+    BranchManager branchManager;
     if(!fs::exists("./data") || !fs::exists("./data/.vcs")){
         fs::create_directory("./data");
         fs::create_directory("./data/.vcs");
@@ -30,6 +32,9 @@ void VCS::init(){
         fileHistoryManager.initializeRepo(); 
 
         std::cout << "Initialized Rift Repository" << std::endl;
+
+        branchManager.setCurrentBranch("main");
+        std::cout << "Created main branch" << std::endl;
     } 
     else{
         std::cout << "Error: Repository already exists" << std::endl;
@@ -37,8 +42,10 @@ void VCS::init(){
 }
 
 void VCS::status(){
+    BranchManager BranchManager;
+    string currentBranch = BranchManager.getCurrentBranch();
     FileHistoryManager fileHistoryManager;
-    fileHistoryManager.loadFromDisk(fileHistoryManager.fileHistoryMapStaged, fileHistoryManager.hashMapStaged); // First we transfer the data from the JSON files to the maps
+    fileHistoryManager.loadFromDisk(fileHistoryManager.fileHistoryMapStaged, fileHistoryManager.hashMapStaged, currentBranch); // First we transfer the data from the JSON files to the maps
     CommitManager CommitManager(fileHistoryManager);
     fileHistoryManager.showStatus();
 }
@@ -72,8 +79,11 @@ bool VCS::hasApiKey() const {
 }
 
 void VCS::add(const string& filename){
+    BranchManager branchManager;
+    string currentBranch = branchManager.getCurrentBranch();
+
     FileHistoryManager fileHistoryManager;
-    fileHistoryManager.loadFromDisk(fileHistoryManager.fileHistoryMapStaged, fileHistoryManager.hashMapStaged);    // Loading the previously stored data
+    fileHistoryManager.loadFromDisk(fileHistoryManager.fileHistoryMapStaged, fileHistoryManager.hashMapStaged, currentBranch);    // Loading the previously stored data
     fileHistoryManager.addFileVersion(filename);
 
     string fileHash = fileHistoryManager.getLatestHashStaged(filename);
@@ -82,8 +92,11 @@ void VCS::add(const string& filename){
 }   
 
 void VCS::commit(const string& message){
+    BranchManager branchManager;
+    string currentBranch = branchManager.getCurrentBranch();
+
     FileHistoryManager fileHistoryManager;
-    fileHistoryManager.loadFromDisk(fileHistoryManager.fileHistoryMapStaged, fileHistoryManager.hashMapStaged);    // Loading the previously stored data
+    fileHistoryManager.loadFromDisk(fileHistoryManager.fileHistoryMapStaged, fileHistoryManager.hashMapStaged, currentBranch);    // Loading the previously stored data
     if(fileHistoryManager.fileHistoryMapStaged.size() == 0){
         std::cout << "Error: No files to commit" << std::endl;
         return;
@@ -93,8 +106,20 @@ void VCS::commit(const string& message){
 }
 
 void VCS::displayCommitHistory(string branch){
+    BranchManager branchManager;
+    string currentBranch = branchManager.getCurrentBranch();
     FileHistoryManager fileHistoryManager;
-    fileHistoryManager.loadFromDisk(fileHistoryManager.fileHistoryMapCommitted, fileHistoryManager.hashMapCommitted);    // Loading the previously stored data
+    fileHistoryManager.loadFromDisk(fileHistoryManager.fileHistoryMapCommitted, fileHistoryManager.hashMapCommitted, currentBranch);    // Loading the previously stored data
     CommitManager commitManager(fileHistoryManager);
     commitManager.displayCommitHistory(branch);
+}
+
+void VCS::createBranch(const std::string &branchName) {
+    BranchManager branchManager;
+    branchManager.createBranch(branchName);
+}
+
+void VCS::switchBranch(const std::string &branchName) {
+    BranchManager branchManager;
+    branchManager.switchBranch(branchName);
 }

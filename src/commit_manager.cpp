@@ -1,5 +1,6 @@
 #include "../include/commit_manager.h"
 #include "../include/file_manager.h"
+#include "../include/branch_manager.h"
 
 
 #include <fstream>
@@ -12,9 +13,9 @@
 #include <ctime>
 
 using json = nlohmann::json;
-namespace fs = std::filesystem;
+namespace fs = std::filesystem; // balu
 
-const string COMMITTED_FILE_HISTORY_PATH = "./data/.vcs/main/";
+const string COMMITTED_FILE_HISTORY_PATH = "./data/.vcs/";
 
 
 string CommitManager::generateCommitHash(const string& message) {
@@ -41,6 +42,9 @@ CommitManager::~CommitManager() {
 
 
 void CommitManager::addCommit(const string& message, FileHistoryManager& fileHistoryManager) {
+
+    BranchManager branchManager;
+    string currentBranch = branchManager.getCurrentBranch();
 
     string commitHash = generateCommitHash(message);
 
@@ -69,7 +73,7 @@ void CommitManager::addCommit(const string& message, FileHistoryManager& fileHis
     }
 
     // Create a directory for this commit.
-    string commitDir = "./data/.vcs/main/Committed State/" + commitHash;
+    string commitDir = "./data/.vcs/"+currentBranch+"/Committed State/" + commitHash;
     fs::create_directories(commitDir);
 
     // Prepare JSON objects to store committed file history and content.
@@ -97,7 +101,7 @@ void CommitManager::addCommit(const string& message, FileHistoryManager& fileHis
 
     fileHistoryManager.fileHistoryMapStaged.clear();
     fileHistoryManager.hashMapStaged.clear();
-    fileHistoryManager.saveToDisk(fileHistoryManager.fileHistoryMapStaged, fileHistoryManager.hashMapStaged);
+    fileHistoryManager.saveToDisk(fileHistoryManager.fileHistoryMapStaged, fileHistoryManager.hashMapStaged, currentBranch);
 
     std::cout << "Commit added: \"" << message << "\" with hash: " << commitHash << std::endl;
 }
@@ -118,8 +122,10 @@ void CommitManager::displayCommitHistory(string branch) {
 }
 
 void CommitManager::saveCommitsToDisk() {
+    BranchManager branchManager;
+    string currentBranch = branchManager.getCurrentBranch();
     // Save the commit history in a binary file ("./data/.vcs/commits.dat").
-    std::ofstream outFile("./data/.vcs/main/commits.dat", std::ios::binary | std::ios::trunc);
+    std::ofstream outFile("./data/.vcs/"+currentBranch+"/commits.dat", std::ios::binary | std::ios::trunc);
     if (!outFile) {
         std::cerr << "Error: Unable to open commits.dat for writing." << std::endl;
         return;
@@ -146,7 +152,10 @@ void CommitManager::saveCommitsToDisk() {
 }
 
 void CommitManager::loadCommitsFromDisk(FileHistoryManager& fileHistoryManager){
-    std::ifstream inFile("./data/.vcs/main/commits.dat", std::ios::binary);
+    BranchManager branchManager;
+    string currentBranch = branchManager.getCurrentBranch();
+
+    std::ifstream inFile("./data/.vcs/"+currentBranch+"/commits.dat", std::ios::binary);
     if (!inFile) {
         // No commit history exists yet.
         return;
@@ -180,7 +189,7 @@ void CommitManager::loadCommitsFromDisk(FileHistoryManager& fileHistoryManager){
 
     //cout << "Tail hash: " << tail->commitHash << endl;
 
-    std::ifstream fileHistoryCommitted(COMMITTED_FILE_HISTORY_PATH + "/Committed State/"+ tail->commitHash + "/fileHistoryMapCommitted.json");
+    std::ifstream fileHistoryCommitted(COMMITTED_FILE_HISTORY_PATH + currentBranch+ "/Committed State/"+ tail->commitHash + "/fileHistoryMapCommitted.json");
     if(fileHistoryCommitted){
         json fileHistoryJsonCommitted;
         fileHistoryCommitted >> fileHistoryJsonCommitted;

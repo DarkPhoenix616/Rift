@@ -1,4 +1,5 @@
 #include "../include/file_manager.h"
+#include "../include/branch_manager.h"
 
 #include <iostream>
 #include <fstream>
@@ -14,10 +15,10 @@ using json = nlohmann::json;
 namespace fs = std::filesystem;
 
 const string INITIAL_FILE_HISTORY_PATH = "./data/.vcs/initial_file_history.json";
-const string STAGED_FILE_HISTORY_PATH = "./data/.vcs/main/Staged State/file_history.json";
-const string STAGED_HASH_MAP_PATH = "./data/.vcs/main/Staged State/hash_map.json";
-const string COMMITTED_FILE_HISTORY_PATH = "./data/.vcs/main/";
-const string COMMITTED_HASH_MAP_PATH = "./data/.vcs/main/Committed State/hash_map.json";
+const string STAGED_FILE_HISTORY_PATH_TEMPLATE    = "./data/.vcs/{branch}/Staged State/file_history.json";
+const string STAGED_HASH_MAP_PATH_TEMPLATE        = "./data/.vcs/{branch}/Staged State/hash_map.json";
+const string COMMITTED_FILE_HISTORY_PATH_TEMPLATE = "./data/.vcs/{branch}/Committed State/file_history.json";
+const string COMMITTED_HASH_MAP_PATH_TEMPLATE     = "./data/.vcs/{branch}/Committed State/hash_map.json";
 
 #define RED     "\033[31m"
 #define RESET   "\033[0m"
@@ -95,7 +96,7 @@ string FileHistoryManager::base64_decode(const std::string &encoded) {
 }
 
 // Function to save data to JSON files
-void FileHistoryManager::saveToDisk(unordered_map<string, FileVersion*>& fileHistoryMap, unordered_map<string, string>& hashMap) {
+void FileHistoryManager::saveToDisk(unordered_map<string, FileVersion*>& fileHistoryMap, unordered_map<string, string>& hashMap, string currentBranch) {
     json fileHistoryJson;
     json hashMapJson;
 
@@ -109,8 +110,17 @@ void FileHistoryManager::saveToDisk(unordered_map<string, FileVersion*>& fileHis
     }
 
 
-    std::ofstream fileHistoryFile(STAGED_FILE_HISTORY_PATH);
-    std::ofstream hashMapFile(STAGED_HASH_MAP_PATH);
+     // branch‑specific paths
+    string stagedHistoryPath = STAGED_FILE_HISTORY_PATH_TEMPLATE;
+    stagedHistoryPath.replace(
+        stagedHistoryPath.find("{branch}"), 8, currentBranch
+    );
+    string stagedHashMapPath = STAGED_HASH_MAP_PATH_TEMPLATE;
+    stagedHashMapPath.replace(
+        stagedHashMapPath.find("{branch}"), 8, currentBranch
+    );
+    std::ofstream fileHistoryFile(stagedHistoryPath);
+    std::ofstream hashMapFile(stagedHashMapPath);
 
     if (fileHistoryFile && hashMapFile) {
         fileHistoryFile << fileHistoryJson.dump(4);
@@ -124,9 +134,19 @@ void FileHistoryManager::saveToDisk(unordered_map<string, FileVersion*>& fileHis
 }
 
 // Function to load data from JSON files
-void FileHistoryManager::loadFromDisk(unordered_map<string, FileVersion*>& fileHistoryMap, unordered_map<string, string>& hashMap) {
-    std::ifstream fileHistoryIn(STAGED_FILE_HISTORY_PATH);
-    std::ifstream hashMapIn(STAGED_HASH_MAP_PATH);
+void FileHistoryManager::loadFromDisk(unordered_map<string, FileVersion*>& fileHistoryMap, unordered_map<string, string>& hashMap, string currentBranch) {
+    // branch‑specific paths
+    string stagedHistoryPath = STAGED_FILE_HISTORY_PATH_TEMPLATE;
+    stagedHistoryPath.replace(
+        stagedHistoryPath.find("{branch}"), 8, currentBranch
+    );
+    string stagedHashMapPath = STAGED_HASH_MAP_PATH_TEMPLATE;
+    stagedHashMapPath.replace(
+        stagedHashMapPath.find("{branch}"), 8, currentBranch
+    );
+    std::ifstream fileHistoryIn(stagedHistoryPath);
+    std::ifstream hashMapIn(stagedHashMapPath);
+    
     std::ifstream fileHistoryInitialIn(INITIAL_FILE_HISTORY_PATH);
     
 
@@ -244,6 +264,9 @@ void FileHistoryManager::initializeRepo() {    // Iterates the entire repository
 
 
 void FileHistoryManager::addFileVersion(const string& filename) {  //Adds the new version of the file to the doubly linked list
+
+    BranchManager branchManager;
+    string currentBranch = branchManager.getCurrentBranch();
     
     if(filename == "."){
         initializeRepo();
@@ -285,7 +308,7 @@ void FileHistoryManager::addFileVersion(const string& filename) {  //Adds the ne
     }
 
     hashMapStaged[newHash] = content;
-    saveToDisk(fileHistoryMapStaged, hashMapStaged);
+    saveToDisk(fileHistoryMapStaged, hashMapStaged, currentBranch);    // Saving the new version of the file to the disk
     std::cout << "Added " << filename << " with hash " << newHash << "\n";
 }
 

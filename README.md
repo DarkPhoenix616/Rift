@@ -2,37 +2,51 @@
 
 Rift is a fast and flexible version control system that makes branching, tracking, and collaboration effortless. Stay in control of your code, experiment freely, and never lose progress.
 
-
 Rift is a lightweight version control system inspired by Git. This repository contains the implementation of Rift, allowing users to track changes in their files.
+
+---
+
+## 🔍 What’s New? AI-Powered Suggestions
+
+Rift now comes with built-in AI support using the *Gemini API*, which intelligently interprets incorrect or ambiguous user commands and suggests valid alternatives — making it beginner-friendly and smarter.
+
+---
 
 ## 📥 Cloning the Repository
 
 To get started, clone this repository using the following command:
 
-```sh
+sh
 git clone https://github.com/DarkPhoenix616/Rift
-```
+
 
 After cloning, navigate into the project directory:
 
-```sh
+sh
 cd rift
-```
 
-## ⚙️ Building the Project
+
+## 🔑 Configuration
+
+Before you build or run Rift, create a .env file in the project root and add your Gemini 2.5 API key:
+
+env
+GEMINI_API_KEY=your_gemini_2.5_api_key_here
+
+## ⚙ Building the Project
 
 This project uses a `Makefile` to compile the source code and a 'dependencies.mk' to install the required dependencies. For Ios, to build the executable, run:
 
-```sh
+sh
 make -f dependencies.mk install
 ```
 
 ```sh
 make
-```
+
 
 For windows, replace the Makefiles with these: 
-```
+
 # Detect OS
 OS := $(shell uname -s)
 
@@ -111,14 +125,14 @@ deps:
 
 .PHONY: all clean run deps
 
-```
+
 
 To run, 
-```
+
 mingw32-make -f dependencies.mk install  # Install dependencies
 mingw32-make                             # Compile the code
 mingw32-make run                         # Run the executable
-```
+
 
 
 This will generate the `Rift` executable in the project directory.
@@ -127,9 +141,9 @@ This will generate the `Rift` executable in the project directory.
 
 Once compiled, you can use Rift without the `./` prefix by moving it to `/usr/local/bin`:
 
-```sh
+sh
 sudo mv Rift /usr/local/bin/
-```
+
 
 Now you can run Rift from anywhere in the terminal!
 
@@ -137,9 +151,9 @@ Now you can run Rift from anywhere in the terminal!
 
 To start using Rift, initialize a repository in your project directory:
 
-```sh
+sh
 Rift init
-```
+
 
 ## 📄 Available Commands
 
@@ -154,7 +168,7 @@ Rift init
 
 To remove the compiled executable:
 
-```sh
+sh
 make clean
 ```
 
@@ -163,5 +177,3 @@ make clean
 Feel free to contribute by submitting issues or pull requests.
 
 ---
-
-

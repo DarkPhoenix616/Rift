@@ -66,6 +66,8 @@ void VCS::suggestCommands(const std::string& invalidCommand) {
         std::cout << "  - add <filename>: Add a file to the staging area" << std::endl;
         std::cout << "  - commit -m <message>: Commit changes with a message" << std::endl;
         std::cout << "  - commit log: Show commit history" << std::endl;
+        std::cout << "  - branch create <branch_name> - To create a new branch of the name <branch_name>" << std::endl;
+        std::cout << "  - branch switch <branch_name>" << std::endl;
     } else {
         std::cout << "Did you mean:" << std::endl;
         for (const auto& suggestion : suggestions) {

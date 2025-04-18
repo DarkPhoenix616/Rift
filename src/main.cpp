@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
             BranchManager branchManager;
             branchManager.switchBranch(command3);
         } else {
-            cerr << "Usage: Rift branch [create|switch] <branch-name>\n";
+            vcs.suggestCommands(command1+command2+command3);
         }
 
     } else if (command1 == "help") {

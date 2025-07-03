@@ -6,7 +6,7 @@ Rift is a fast and flexible version control system that makes branching, trackin
 Rift is a lightweight version control system inspired by Git. This repository contains the implementation of Rift, allowing users to track changes in their files.
 
 <p align="center">
-  <img src="[https://i.imgur.com/xqpheDT.jpeg](https://portfoliosimages.s3.us-east-1.amazonaws.com/Rift+logo.png)" alt="Rift Logo" width="250"/>
+  <img src="https://portfoliosimages.s3.us-east-1.amazonaws.com/Rift+logo.png" alt="Rift Logo" width="250"/>
 </p>
 
 
